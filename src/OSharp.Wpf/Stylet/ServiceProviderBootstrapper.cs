@@ -7,29 +7,43 @@
 //  <last-date>2020-05-28 15:00</last-date>
 // -----------------------------------------------------------------------
 
+using Microsoft.Extensions.Hosting;
+
+
 namespace OSharp.Wpf.Stylet;
 
 public abstract class ServiceProviderBootstrapper<TRootViewModel> : BootstrapperBase where TRootViewModel : class
 {
+    private IHostBuilder _hostBuilder;
+    private IHost _host;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
     private TRootViewModel _rootViewModel;
     protected virtual TRootViewModel RootViewModel => this._rootViewModel ??= (TRootViewModel)this.GetInstance(typeof(TRootViewModel));
 
-    private ServiceProvider _serviceProvider;
+    protected IServiceProvider ServiceProvider { get; private set; }
 
-    protected IServiceProvider ServiceProvider => _serviceProvider;
+    /// <summary>
+    /// Called on application startup. This occur after this.Args has been assigned, but before the IoC container has been configured
+    /// </summary>
+    protected override void OnStart()
+    {
+        _hostBuilder = Host.CreateDefaultBuilder();
+    }
 
     /// <summary>
     /// Overridden from BootstrapperBase, this sets up the IoC container
     /// </summary>
     protected override void ConfigureBootstrapper()
     {
-        IServiceCollection services = new ServiceCollection();
-
-        // Call DefaultConfigureIoC *after* ConfigureIoIC, so that they can customize builder.Assemblies
-        this.DefaultConfigureIoC(services);
-        this.ConfigureIoC(services);
-
-        _serviceProvider = services.BuildServiceProvider();
+        _hostBuilder.ConfigureServices((context, services) =>
+        {
+            services.AddSingleton(context);
+            DefaultConfigureIoC(services);
+            ConfigureIoC(services);
+        });
+        _host = _hostBuilder.Build();
+        ServiceProvider = _host.Services;
+        _host.StartAsync(_cancellationTokenSource.Token).GetAwaiter().GetResult();
     }
 
     protected virtual void ConfigureIoC(IServiceCollection services)
@@ -40,7 +54,7 @@ public abstract class ServiceProviderBootstrapper<TRootViewModel> : Bootstrapper
         var viewManagerConfig = new ViewManagerConfig()
         {
             ViewFactory = this.GetInstance,
-            ViewAssemblies = new List<Assembly>(){ this.GetType().Assembly}
+            ViewAssemblies = new List<Assembly>() { this.GetType().Assembly }
         };
 
         services.AddSingleton<IViewManager>(new ViewManager(viewManagerConfig));
@@ -72,13 +86,39 @@ public abstract class ServiceProviderBootstrapper<TRootViewModel> : Bootstrapper
         return ServiceProvider?.GetService(type);
     }
 
+    /// <summary>Hook called on application exit</summary>
+    /// <param name="e">The exit event data</param>
+    protected override void OnExit(ExitEventArgs e)
+    {
+        base.OnExit(e);
+        // 在应用程序退出时停止 host
+        _cancellationTokenSource.Cancel();
+        try
+        {
+            _host?.StopAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            // 记录日志但不阻止退出
+            System.Diagnostics.Debug.WriteLine($"Error stopping host during exit: {ex.Message}");
+        }
+    }
+
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
     /// </summary>
     public override void Dispose()
     {
         base.Dispose();
+        try
+        {
+            _host?.StopAsync().GetAwaiter().GetResult();
+        }
+        finally
+        {
+            _host?.Dispose();
+            _cancellationTokenSource.Dispose();
+        }
         ScreenExtensions.TryDispose(_rootViewModel);
-        _serviceProvider?.Dispose();
     }
 }
