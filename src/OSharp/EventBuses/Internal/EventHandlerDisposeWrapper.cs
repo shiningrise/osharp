@@ -30,12 +30,11 @@ public class EventHandlerDisposeWrapper : Disposable
     /// </summary>
     public IEventHandler EventHandler { get; set; }
 
-    protected override void Dispose(bool disposing)
+    /// <summary>
+    /// 重写以实现释放派生类资源的逻辑
+    /// </summary>
+    protected override void Disposing()
     {
-        if (!Disposed)
-        {
-            _disposeAction?.Invoke();
-        }
-        base.Dispose(disposing);
+        _disposeAction?.Invoke();
     }
 }

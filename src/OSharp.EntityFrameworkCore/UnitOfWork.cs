@@ -264,7 +264,21 @@ public class UnitOfWork : Disposable, IUnitOfWork
 
         base.Dispose(disposing);
     }
-        
+
+    /// <summary>
+    /// 重写以实现释放派生类资源的逻辑
+    /// </summary>
+    protected override void Disposing()
+    {
+        foreach (var contexts in _contextDict.Values)
+        {
+            foreach (var context in contexts)
+            {
+                context.Dispose();
+            }
+        }
+    }
+
     /// <summary>
     /// 对数据库连接开启事务
     /// </summary>

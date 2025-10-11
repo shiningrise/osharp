@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
 //  <copyright file="Disposable.cs" company="OSharp开源团队">
 //      Copyright (c) 2014-2020 OSharp. All rights reserved.
 //  </copyright>
@@ -21,11 +21,21 @@ namespace System
         
         protected virtual void Dispose(bool disposing)
         {
+            if (Disposed)
+            {
+                return;
+            }
             if (disposing)
             {
-                Disposed = true; 
+                Disposing();
             }
+            Disposed = true;
         }
+
+        /// <summary>
+        /// 重写以实现释放派生类资源的逻辑
+        /// </summary>
+        protected abstract void Disposing();
 
         /// <summary>执行与释放或重置非托管资源关联的应用程序定义的任务。</summary>
         public void Dispose()

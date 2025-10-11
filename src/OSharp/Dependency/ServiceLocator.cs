@@ -273,10 +273,12 @@ public class ServiceLocator : Disposable
         }
     }
 
-    protected override void Dispose(bool disposing)
+    /// <summary>
+    /// 重写以实现释放派生类资源的逻辑
+    /// </summary>
+    protected override void Disposing()
     {
         _services = null;
         _provider = null;
-        base.Dispose(disposing);
     }
 }

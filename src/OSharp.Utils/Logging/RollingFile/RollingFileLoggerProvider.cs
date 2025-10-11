@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
 //  <copyright file="RollingFileLoggerProvider.cs" company="OSharp开源团队">
 //      Copyright (c) 2014-2017 OSharp. All rights reserved.
 //  </copyright>
@@ -100,6 +100,14 @@ namespace OSharp.Logging.RollingFile
                     item.Delete();
                 }
             }
+        }
+
+        /// <summary>
+        /// 重写以实现释放派生类资源的逻辑
+        /// </summary>
+        protected override void Disposing()
+        {
+            
         }
     }
 }
