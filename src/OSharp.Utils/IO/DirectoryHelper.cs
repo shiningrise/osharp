@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
 //  <copyright file="DirectoryHelper.cs" company="OSharp开源团队">
 //      Copyright (c) 2014 OSharp. All rights reserved.
 //  </copyright>
@@ -33,6 +33,10 @@ namespace OSharp.IO
         /// <param name="directory">要创建的文件夹路径</param>
         public static void CreateIfNotExists(string directory)
         {
+            if (string.IsNullOrEmpty(directory))
+            {
+                return;
+            }
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);

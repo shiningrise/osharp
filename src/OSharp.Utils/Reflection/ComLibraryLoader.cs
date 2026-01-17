@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
 //  <copyright file="ComLibraryLoader.cs" company="OSharp开源团队">
 //      Copyright (c) 2014-2017 OSharp. All rights reserved.
 //  </copyright>
@@ -101,13 +101,12 @@ namespace OSharp.Reflection
             return Activator.CreateInstance(type);
         }
 
-        protected override void Dispose(bool disposing)
+        /// <summary>
+        /// 重写以实现释放派生类资源的逻辑
+        /// </summary>
+        protected override void Disposing()
         {
-            if (!Disposed)
-            {
-                NativeMethods.FreeLibrary(_lib);
-            }
-            base.Dispose(disposing);
+            NativeMethods.FreeLibrary(_lib);
         }
     }
 }
